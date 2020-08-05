@@ -4,7 +4,7 @@ import income from '../../assets/income.svg';
 import outcome from '../../assets/outcome.svg';
 import total from '../../assets/total.svg';
 
-import api from '../../services/api';
+import { listTransactions } from '../../services/api';
 
 import Header from '../../components/Header';
 
@@ -30,12 +30,32 @@ interface Balance {
 }
 
 const Dashboard: React.FC = () => {
-  // const [transactions, setTransactions] = useState<Transaction[]>([]);
-  // const [balance, setBalance] = useState<Balance>({} as Balance);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [balance, setBalance] = useState<Balance>({} as Balance);
 
   useEffect(() => {
     async function loadTransactions(): Promise<void> {
-      // TODO
+      const { data } = await listTransactions();
+
+      const fetchedTransactions = data.transactions;
+      const fetchedBalance = data.balance;
+
+      const formattedTransactions = fetchedTransactions.map(
+        (transaction: Transaction) => {
+          const formattedValue =
+            transaction.type === 'outcome'
+              ? `- ${formatValue(transaction.value)}`
+              : formatValue(transaction.value);
+
+          return {
+            ...transaction,
+            formattedValue,
+          };
+        },
+      );
+
+      setTransactions(formattedTransactions);
+      setBalance(fetchedBalance);
     }
 
     loadTransactions();
@@ -81,18 +101,14 @@ const Dashboard: React.FC = () => {
             </thead>
 
             <tbody>
-              <tr>
-                <td className="title">Computer</td>
-                <td className="income">R$ 5.000,00</td>
-                <td>Sell</td>
-                <td>20/04/2020</td>
-              </tr>
-              <tr>
-                <td className="title">Website Hosting</td>
-                <td className="outcome">- R$ 1.000,00</td>
-                <td>Hosting</td>
-                <td>19/04/2020</td>
-              </tr>
+              {transactions.map(transaction => (
+                <tr key={transaction.id}>
+                  <td className="title">{transaction.title}</td>
+                  <td className="income">{transaction.formattedValue}</td>
+                  <td>{transaction.category.title}</td>
+                  <td>{transaction.formattedDate}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </TableContainer>
