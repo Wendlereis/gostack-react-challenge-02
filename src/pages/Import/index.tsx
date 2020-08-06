@@ -1,5 +1,6 @@
-/* eslint-disable no-await-in-loop */
 /* eslint-disable no-plusplus */
+/* eslint-disable no-await-in-loop */
+
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 
@@ -24,13 +25,9 @@ const Import: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<FileProps[]>([]);
   const history = useHistory();
 
-  const asyncForEach = async (
-    array: FileProps[],
-    callback: (
-      item: FileProps,
-      index: number,
-      array: FileProps[],
-    ) => Promise<void>,
+  const asyncForEach = async <T extends {}>(
+    array: T[],
+    callback: (item: T, index?: number, array?: T[]) => Promise<void>,
   ): Promise<void> => {
     for (let index = 0; index < array.length; index++) {
       await callback(array[index], index, array);
@@ -45,7 +42,7 @@ const Import: React.FC = () => {
     const data = new FormData();
 
     try {
-      await asyncForEach(uploadedFiles, async file => {
+      await asyncForEach<FileProps>(uploadedFiles, async file => {
         data.append('file', file.file);
         await api.post('/transactions/import', data);
         data.delete('file');
